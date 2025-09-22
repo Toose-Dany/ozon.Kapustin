@@ -1,7 +1,7 @@
 import sqlite3
 
 
-class ozonService:
+class ProductService:
     def __init__(self, db_name: str = ""):
         self.db_name = db_name
         self.init_db()
@@ -10,12 +10,18 @@ class ozonService:
         return sqlite3.connect(self.db_name)
 
     def init_db(self):
-        """Иницилизация таблиц"""
-        with self.get_connection as conn:
+        """Инициализация таблиц для склада Ozon"""
+        with self.get_connection() as conn:
             conn.execute('''
-                CREATE TABLE IF NOT EXISTS ozons(
+                CREATE TABLE IF NOT EXISTS products(
                          id INTEGER PRIMARY KEY AUTOINCREMENT,
-                         plane TEXT NOT NULL,
-                         price REAL NOT NULL
+                         name TEXT NOT NULL,
+                         sku TEXT NOT NULL UNIQUE,
+                         quantity INTEGER NOT NULL,
+                         price REAL NOT NULL,
+                         category TEXT,
+                         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
                          )
                 ''')
+            
