@@ -1,3 +1,6 @@
+# Добавьте этот импорт в начало файла main.py
+from product import Product  # ← ДОБАВЬТЕ ЭТУ СТРОКУ
+
 from repository import ProductRepository
 from database import DatabaseConfig, DatabaseConnection
 from migrations import MigrationManager
@@ -7,7 +10,7 @@ from pydantic import BaseModel, Field, validator
 from typing import Optional, List
 from datetime import datetime
 
-# Pydantic модели для валидации
+
 class ProductBase(BaseModel):
     name: str = Field(..., min_length=1, max_length=100, description="Название товара")
     sku: str = Field(..., min_length=1, max_length=50, description="Артикул товара")

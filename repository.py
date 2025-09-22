@@ -1,101 +1,149 @@
-from ozon import ozon
+from product import Product  # Исправленный импорт
 from database import DatabaseConnection
 
 
-class ozonRepository:
-    '''Класс-репозиторий для доступа к БД'''
+class ProductRepository:
+    '''Класс-репозиторий для доступа к БД склада Ozon'''
 
-    def __init__(self,connection: DatabaseConnection):
-        self.connection=connection
+    def __init__(self, connection: DatabaseConnection):
+        self.connection = connection
 
-    def create_ozon(self, ozon:ozon):
-        """Добавление заказа"""
+    def create_product(self, product: Product):
+        """Добавление товара на склад"""
 
         conn = self.connection.get_connection()
         cursor = conn.cursor()
 
         cursor.execute('''
-            INSERT INTO ozons
-                        (name,price)
-                        VALUES (%s,%s)
-            ''',(ozon.name,ozon.price))
+            INSERT INTO products 
+                        (name, sku, quantity, price, category)
+                        VALUES (%s, %s, %s, %s, %s)
+            RETURNING id
+            ''', (product.name, product.sku, product.quantity, product.price, product.category))
+        
+        product_id = cursor.fetchone()[0]
         conn.commit()
 
         cursor.close()
         conn.close()
 
-        return ozon
+        product.id = product_id
+        return product
     
     def get_all(self):
+        """Получить все товары"""
         conn = self.connection.get_connection()
         cursor = conn.cursor()
-        cursor.execute("SELECT * FROM ozons ORDER BY id")
+        cursor.execute("SELECT id, name, sku, quantity, price, category FROM products ORDER BY id")
         rows = cursor.fetchall()
 
-        ozons = []
+        products = []
         for row in rows:
-            ozons.append(ozon(
-                row[0],
-                row[1],
-                row[2]
+            products.append(Product(
+                id=row[0],
+                name=row[1],
+                sku=row[2],
+                quantity=row[3],
+                price=row[4],
+                category=row[5]
             ))
               
         cursor.close()
         conn.close()
-        return ozons
+        return products
         
-    def get_by_id(self,ozon_id:int):
-        """Получить хзаказ по id"""
+    def get_by_id(self, product_id: int):
+        """Получить товар по id"""
         conn = self.connection.get_connection()
         cursor = conn.cursor()
 
-        cursor.execute("SELECT * FROM ozons WHERE id = %s",(ozon_id,))
+        cursor.execute("SELECT id, name, sku, quantity, price, category FROM products WHERE id = %s", (product_id,))
         row = cursor.fetchone()
         
         cursor.close()
         conn.close()
 
         if row:
-            return ozon(
-                row[0],
-                row[1],
-                row[2]
+            return Product(
+                id=row[0],
+                name=row[1],
+                sku=row[2],
+                quantity=row[3],
+                price=row[4],
+                category=row[5]
             )
         return None
     
-    def update_ozon(self, ozon:ozon):
-        """Изменить существующий заказ. 
-            Если заказа не существует, ничего не делать."""
+    def get_by_sku(self, sku: str):
+        """Получить товар по артикулу (SKU)"""
         conn = self.connection.get_connection()
         cursor = conn.cursor()
-        
-        cursor.execute('''
-            UPDATE ozons
-            SET price = %s, name = %s
-            WHERE id = %s
-            ''',(ozon.price, ozon.name, ozon.id))
-        
-        result = cursor.fetchone()
-        ozon.id = result[0]
-        conn.commit()
 
+        cursor.execute("SELECT id, name, sku, quantity, price, category FROM products WHERE sku = %s", (sku,))
+        row = cursor.fetchone()
+        
         cursor.close()
         conn.close()
 
-        return ozon
+        if row:
+            return Product(
+                id=row[0],
+                name=row[1],
+                sku=row[2],
+                quantity=row[3],
+                price=row[4],
+                category=row[5]
+            )
+        return None
     
-    def delete_ozon(self,ozon_id:int):
-        """Удалить существующий заказ.
-            Если заказа не существует, ничего не делать."""
+    def update_product(self, product: Product):
+        """Изменить существующий товар."""
         conn = self.connection.get_connection()
         cursor = conn.cursor()
+        
         cursor.execute('''
-            DELETE FROM ozons WHERE id = %s
-            ''',(ozon_id,))
+            UPDATE products
+            SET name = %s, sku = %s, quantity = %s, price = %s, category = %s
+            WHERE id = %s
+            ''', (product.name, product.sku, product.quantity, product.price, product.category, product.id))
+        
         conn.commit()
-        deleted = cursor.rowcount
 
         cursor.close()
         conn.close()
 
-        return deleted >0
+        return product
+    
+    def update_stock(self, product_id: int, new_quantity: int):
+        """Обновить количество товара на складе"""
+        conn = self.connection.get_connection()
+        cursor = conn.cursor()
+        
+        cursor.execute('''
+            UPDATE products
+            SET quantity = %s
+            WHERE id = %s
+            ''', (new_quantity, product_id))
+        
+        conn.commit()
+        updated = cursor.rowcount > 0
+
+        cursor.close()
+        conn.close()
+
+        return updated
+    
+    def delete_product(self, product_id: int):
+        """Удалить товар со склада"""
+        conn = self.connection.get_connection()
+        cursor = conn.cursor()
+        cursor.execute('''
+            DELETE FROM products WHERE id = %s
+            ''', (product_id,))
+        conn.commit()
+        deleted = cursor.rowcount > 0
+
+        cursor.close()
+        conn.close()
+
+        return deleted
