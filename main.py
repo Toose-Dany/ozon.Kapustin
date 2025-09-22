@@ -35,20 +35,20 @@ async def get_ozons():
     try:
         return service.get_all()
     except Exception as e:
-        return HTTPException(status_code=500, detail=f"Ошибка при получении полётов: {str(e)}")
+        return HTTPException(status_code=500, detail=f"Ошибка при получении данных: {str(e)}")
 
 @app.post("/ozons")
 async def create_ozon(ozon_data: dict):
     try:
         #Validation
-        required_fields = ["price","plane"]
+        required_fields = ["price","name"]
         for field in required_fields:
             if field not in ozon_data:
                 raise HTTPException(status_code=400,detail=f"Отсутствует обязательное поле {field}")
         
         ozon = ozon(
-            price=ozon_data['price'],
-            plane=ozon_data['plane']
+            price=ozon_data['name'],
+            plane=ozon_data['price']
         )
 
         created_ozon = service.create_ozon(ozon)

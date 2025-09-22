@@ -9,16 +9,16 @@ class ozonRepository:
         self.connection=connection
 
     def create_ozon(self, ozon:ozon):
-        """Добавление рейса"""
+        """Добавление заказа"""
 
         conn = self.connection.get_connection()
         cursor = conn.cursor()
 
         cursor.execute('''
             INSERT INTO ozons
-                        (plane,price)
+                        (name,price)
                         VALUES (%s,%s)
-            ''',(ozon.plane,ozon.price))
+            ''',(ozon.name,ozon.price))
         conn.commit()
 
         cursor.close()
@@ -45,7 +45,7 @@ class ozonRepository:
         return ozons
         
     def get_by_id(self,ozon_id:int):
-        """Получить рейс по идентификатору"""
+        """Получить хзаказ по id"""
         conn = self.connection.get_connection()
         cursor = conn.cursor()
 
@@ -64,16 +64,16 @@ class ozonRepository:
         return None
     
     def update_ozon(self, ozon:ozon):
-        """Изменить существующий рейс. 
-            Если рейса не существует, ничего не делать."""
+        """Изменить существующий заказ. 
+            Если заказа не существует, ничего не делать."""
         conn = self.connection.get_connection()
         cursor = conn.cursor()
         
         cursor.execute('''
             UPDATE ozons
-            SET price = %s, plane = %s
+            SET price = %s, name = %s
             WHERE id = %s
-            ''',(ozon.price, ozon.plane, ozon.id))
+            ''',(ozon.price, ozon.name, ozon.id))
         
         result = cursor.fetchone()
         ozon.id = result[0]
@@ -85,8 +85,8 @@ class ozonRepository:
         return ozon
     
     def delete_ozon(self,ozon_id:int):
-        """Удалить существующий рейс.
-            Если рейса не существует, ничего не делать."""
+        """Удалить существующий заказ.
+            Если заказа не существует, ничего не делать."""
         conn = self.connection.get_connection()
         cursor = conn.cursor()
         cursor.execute('''
