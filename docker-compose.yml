@@ -21,7 +21,7 @@ services:
   app:
     build: .
     ports:
-      - "8080:8080"
+      - "5432:5432"
     environment:
       DATABASE_URL: postgresql://postgres:postgres@postgres:5432/ozon_warehouse_db
     depends_on:
