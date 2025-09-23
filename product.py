@@ -14,4 +14,4 @@ class Product:
         if self.quantity < 0:
             raise ValueError("Quantity cannot be negative")
         if self.price <= 0:
-            raise ValueError("Price must be positive")
+            raise ValueError("Price must be positive") 

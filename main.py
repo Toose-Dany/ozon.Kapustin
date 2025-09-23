@@ -46,8 +46,8 @@ db_config = DatabaseConfig(
 )
 db_connection = DatabaseConnection(db_config)
 ## Migrations
-migration_manager = MigrationManager(db_config)
-migration_manager.create_tables()
+#migration_manager = MigrationManager(db_config)
+#migration_manager.create_tables()
 # Repository and Service
 repository = ProductRepository(db_connection)
 service = ProductService(repository)
