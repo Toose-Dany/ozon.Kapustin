@@ -1,16 +1,18 @@
-# Добавьте этот импорт в начало файла main.py
-from product import Product  # ← ДОБАВЬТЕ ЭТУ СТРОКУ
+import sys
+import os
+sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
 from repository import ProductRepository
 from database import DatabaseConfig, DatabaseConnection
 from migrations import MigrationManager
 from service import ProductService
 from fastapi import FastAPI, HTTPException, status
-from pydantic import BaseModel, Field, validator
+from pydantic import BaseModel, Field
 from typing import Optional, List
 from datetime import datetime
+from product import Product
 
-
+# Pydantic модели для валидации
 class ProductBase(BaseModel):
     name: str = Field(..., min_length=1, max_length=100, description="Название товара")
     sku: str = Field(..., min_length=1, max_length=50, description="Артикул товара")
@@ -41,13 +43,11 @@ db_config = DatabaseConfig(
     'ozon_warehouse_db',
     'postgres',
     'postgres',
-    '123Secret_a',
+    'postgres',
     5432
 )
 db_connection = DatabaseConnection(db_config)
-## Migrations
-#migration_manager = MigrationManager(db_config)
-#migration_manager.create_tables()
+
 # Repository and Service
 repository = ProductRepository(db_connection)
 service = ProductService(repository)
@@ -56,6 +56,27 @@ app = FastAPI(
     title="Ozon Warehouse API",
     description="API для управления складом товаров Ozon"
 )
+
+# Создание таблиц при запуске приложения
+@app.on_event("startup")
+async def startup_event():
+    try:
+        # Проверяем подключение к БД
+        conn = db_connection.get_connection()
+        with conn.cursor() as cursor:
+            cursor.execute("SELECT version()")
+            db_version = cursor.fetchone()
+            print(f"Подключение к PostgreSQL: {db_version[0]}")
+        
+        # Проверяем и создаем таблицы
+        migration_manager = MigrationManager(db_config)
+        if migration_manager.create_tables():
+            print("База данных готова к работе")
+        else:
+            print("Проблемы с базой данных")
+            
+    except Exception as e:
+        print(f"Ошибка при запуске: {e}")
 
 @app.get("/")
 async def root():

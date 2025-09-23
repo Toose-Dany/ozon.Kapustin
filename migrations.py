@@ -1,29 +1,32 @@
-from database import DatabaseConfig,DatabaseConnection
-class MigrationManager:
+import psycopg2
+from database import DatabaseConfig
 
-    def __init__(self, config:DatabaseConfig):
-        self.config = config
-        self.connection = DatabaseConnection(self.config)
+class MigrationManager:
+    def __init__(self, db_config: DatabaseConfig):
+        self.db_config = db_config
+
+    def get_connection(self):
+        return psycopg2.connect(
+            database=self.db_config.database,
+            user=self.db_config.user,
+            password=self.db_config.password,
+            host=self.db_config.host,
+            port=self.db_config.port
+        )
 
     def create_tables(self):
-        #Initialize
-        conn = self.connection.get_connection()
-        cursor = conn.cursor()
-        
-        #Execution
-        cursor.execute('''
-            CREATE TABLE IF NOT EXISTS product(
-                        id SERIAL PRIMARY KEY,
-                        name VARCHAR(100) NOT NULL,
-                        price DECIMAL(10,2) NOT NULL,
-                        weight DECIMAL(10,2) NOT NULL,
-                        size DECIMAL(10,2) NOT NULL
-
-
-                        )
-            ''')
-        conn.commit()
-
-        #Deinitialize
-        cursor.close()
-        conn.close()
+        """Проверка существования таблиц (создаются через init-db.sql)"""
+        try:
+            with self.get_connection() as conn:
+                with conn.cursor() as cursor:
+                    # Просто проверяем что таблицы существуют
+                    cursor.execute("SELECT COUNT(*) FROM products")
+                    print("✅ Таблица products существует")
+                    
+                    cursor.execute("SELECT COUNT(*) FROM stock_movements")
+                    print("✅ Таблица stock_movements существует")
+                    
+            return True
+        except Exception as e:
+            print(f"❌ Таблицы не созданы: {e}")
+            return False

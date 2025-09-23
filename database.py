@@ -4,7 +4,7 @@ class DatabaseConfig:
     '''Класс конфигурации БД'''
     def __init__(self,
                  database: str = "", 
-                 host: str="", 
+                 host: str="198.168.143.68", 
                  user:str = "", 
                  password:str = "",
                  port:int="5432"):
